@@ -43,7 +43,8 @@ var Revisioner = (function () {
     // Make tools available client side callbacks supplied in options
     this.Tool = Tool;
 
-
+	//modify by gdw
+    var nonFileNameCharPrefix = '[^a-zA-Z0-9\\-\\_]';
     var nonFileNameChar = '[^a-zA-Z0-9\\.\\-\\_\\/]';
     var qoutes = '\'|"';
 
@@ -61,7 +62,7 @@ var Revisioner = (function () {
       }
 
       // Expect left and right sides of the reference to be a non-filename type character, escape special regex chars
-      regExp = '('+ nonFileNameChar +')(' + escapedRefPathBase + ')(' +  escapedRefPathExt + ')('+ nonFileNameChar + '|$)';
+      regExp = '('+ nonFileNameCharPrefix +')(' + escapedRefPathBase + ')(' +  escapedRefPathExt + ')('+ nonFileNameChar + '|$)';
       regExps.push(new RegExp(regExp, 'g'));
 
       return regExps;
@@ -221,6 +222,7 @@ var Revisioner = (function () {
       return;
     }
 
+	//console.log('fileResolveReferencesIn: ', fileResolveReferencesIn.path);
     // For the current file (fileResolveReferencesIn), look for references to any other file in the project
     for (var path in this.files) {
 
@@ -228,6 +230,8 @@ var Revisioner = (function () {
       var fileCurrentReference = this.files[path];
       var references;
 
+	//console.log('check file: ', path);
+	/* comment by gdw
       references = this.Tool.get_reference_representations_relative(fileCurrentReference, fileResolveReferencesIn);
       for (var i = 0, length = references.length; i < length; i++) {
         referenceGroupRelative.push({
@@ -235,6 +239,8 @@ var Revisioner = (function () {
           'path': references[i]
         });
       }
+	console.log('get_reference_representations_relative: ', references);
+	*/
 
       references = this.Tool.get_reference_representations_absolute(fileCurrentReference, fileResolveReferencesIn);
       for (var i = 0, length = references.length; i < length; i++) {
@@ -243,19 +249,23 @@ var Revisioner = (function () {
           'path': references[i]
         });
       }
+	//console.log('get_reference_representations_absolute: ', references);
 
     }
-
-    // Priority relative references higher than absolute
+    
+	// Priority relative references higher than absolute
     for (var referenceType in fileResolveReferencesIn.referenceGroupsContainer) {
       var referenceGroup = fileResolveReferencesIn.referenceGroupsContainer[referenceType];
 
+	//console.log('referenceType: ', referenceType);
       for (var referenceIndex = 0, referenceGroupLength = referenceGroup.length; referenceIndex < referenceGroupLength; referenceIndex++) {
         var reference = referenceGroup[referenceIndex];
         var regExps = this.options.referenceToRegexs(reference);
-
+	//console.log('reference: ', reference.path, reference.file.revPath, Object.keys(reference.file));
         for (var j = 0; j < regExps.length; j++) {
+//	  this.log('check regexp: ', regExps[j]);
           if (contents.match(regExps[j])) {
+	//	console.log('match :', reference.path);
             // Only register this reference if we don't have one already by the same path
             if (!fileResolveReferencesIn.revReferencePaths[reference.path]) {
 
@@ -265,7 +275,7 @@ var Revisioner = (function () {
                 'file': reference.file,
                 'path': reference.path
               };
-              this.log('gulp-rev-all:', 'Found', referenceType, 'reference [', chalk.magenta(reference.path), '] -> [', chalk.green(reference.file.path), '] in [', chalk.blue(fileResolveReferencesIn.revPathOriginal), ']');
+              this.log('gulp-rev-all:', 'Found', referenceType, 'reference [', chalk.magenta(reference.path), '] -> [', chalk.green(reference.file.path), '] in [', chalk.blue(fileResolveReferencesIn.revPathOriginal), ']', 'regExps: ', regExps[j]);
             } else if (fileResolveReferencesIn.revReferencePaths[reference.path].file.revPathOriginal === reference.file.revPathOriginal) {
               // Append the other regexes to account for inconsitent use
               fileResolveReferencesIn.revReferencePaths[reference.path].regExps.push(regExps[j]);
@@ -350,7 +360,7 @@ var Revisioner = (function () {
     var pathOriginal = this.Tool.get_relative_path(this.pathBase, file.revPathOriginal, true);
     var pathRevisioned = this.Tool.get_relative_path(file.base, file.path, true);
     // Add only specific file types to the manifest file
-    if (this.options.includeFilesInManifest.indexOf(ext) !== -1) {
+    if (this.options.includeFilesInManifest.indexOf('*') !== -1 || this.options.includeFilesInManifest.indexOf(ext) !== -1) {
         this.manifest[pathOriginal] = pathRevisioned;
     }
 

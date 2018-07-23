@@ -39,7 +39,7 @@ module.exports = (function() {
     if (base === path) {
       return '';
     }
-
+//	console.log('get_relative_path: ', base, path, noStartingSlash);
     // Sanitize inputs, convert windows to posix style slashes, ensure trailing slash for base
     base = base.replace(/^[a-z]:/i, '').replace(/\\/g, '/').replace(/\/$/g, '') + '/';
     path = path.replace(/^[a-z]:/i, '').replace(/\\/g, '/');
@@ -58,6 +58,7 @@ module.exports = (function() {
       }
     }
 
+//	console.log('get_relative_path result: ',path)
     return path;
 
   };
@@ -140,7 +141,8 @@ module.exports = (function() {
 
     //  Scenario 1: Current file is anywhere
     //  /view/index.html  (reference: absolute)
-    representations.push(get_relative_path(fileCurrentReference.base, fileCurrentReference.revPathOriginal, false));
+    //  comment by gdw
+    //representations.push(get_relative_path(fileCurrentReference.base, fileCurrentReference.revPathOriginal, false));
     
     // Without starting slash, only if it contains a directory
     // view/index.html  (reference: absolute, without slash prefix)
